@@ -18,7 +18,7 @@ kvm:
 
 .PHONY: rr
 rr:
-	rumprun kvm -rr -b disk.img,/ -i postmark-rumprun.bin
+	rumprun qemu -b disk.img,/ -r -i postmark-rumprun.bin
 
 
 .PHONY: disk
