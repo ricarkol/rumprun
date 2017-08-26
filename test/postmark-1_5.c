@@ -591,7 +591,7 @@ int deleted; /* files deleted back-to-back */
    t_elapsed=diff_time(t_end_time,t_start_time);
    interval=diff_time(t_start_time,start_time);
 
-   fprintf(fp,"%d %d %.2f ", elapsed, t_elapsed, 
+   fprintf(fp,"%d %d tps=%.2f ", elapsed, t_elapsed, 
       (float)transactions/t_elapsed);
    fprintf(fp, "%.2f %.2f %.2f ", (float)files_created/elapsed, 
       (float)simultaneous/interval,
