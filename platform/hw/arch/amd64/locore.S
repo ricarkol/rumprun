@@ -42,7 +42,7 @@ bootstrap:
 .long 0x100000
 .long _edata
 .long _ebss
-.long _start
+.long _startNO
 
 .space 4096
 bootstack:
@@ -55,7 +55,7 @@ bootstack:
  * and switch to long mode.  Notably, we can't call C code until
  * we've switched to long mode.
  */
-ENTRY(_start)
+ENTRY(_startNO)
 	cld
 	movl $bootstack, %esp
 
@@ -146,7 +146,7 @@ haltme:
 	cli
 	hlt
 	jmp haltme
-END(_start)
+END(_startNO)
 
 nomultimesg:
 	.asciz "not multibooted, halting!"

@@ -32,6 +32,14 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/printf.h>
 
+void _start(void *arg);
+
+void _start(void *arg)
+{
+    __asm__ __volatile__("cli; hlt");
+    while (1);
+}
+
 void
 x86_boot(struct multiboot_info *mbi)
 {
