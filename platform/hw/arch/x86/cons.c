@@ -31,54 +31,98 @@
 
 #include <bmk-core/printf.h>
 
-static void (*vcons_putc)(int) = vgacons_putc;
+char bios_com1_base;
+char bios_crtc_base;
 
 /*
  * Filled in by locore from BIOS data area.
  */
-uint16_t bios_com1_base, bios_crtc_base;
+#define UKVM_HYPERCALL_PIO_BASE 0x500
+
+#define UKVM_GUEST_PTR(T) T
+
+
+/*
+ * On x86, 32-bit PIO is used as the hypercall mechanism. This only supports
+ * sending 32-bit pointers; raise an assertion if a bigger pointer is used.
+ *
+ * On x86 the compiler-only memory barrier ("memory" clobber) is sufficient
+ * across the hypercall boundary.
+ */
+static inline void ukvm_do_hypercall(int n, volatile void *arg)
+{
+#    ifdef assert
+    assert(((uint64_t)arg <= UINT32_MAX));
+#    endif
+    __asm__ __volatile__("outl %0, %1"
+            :
+            : "a" ((uint32_t)((uint64_t)arg)),
+              "d" ((uint16_t)(UKVM_HYPERCALL_PIO_BASE + n))
+            : "memory");
+}
+
+enum ukvm_hypercall {
+    /* UKVM_HYPERCALL_RESERVED=0 */
+    UKVM_HYPERCALL_WALLTIME=1,
+    UKVM_HYPERCALL_PUTS,
+    UKVM_HYPERCALL_POLL,
+    UKVM_HYPERCALL_BLKINFO,
+    UKVM_HYPERCALL_BLKWRITE,
+    UKVM_HYPERCALL_BLKREAD,
+    UKVM_HYPERCALL_NETINFO,
+    UKVM_HYPERCALL_NETWRITE,
+    UKVM_HYPERCALL_NETREAD,
+    UKVM_HYPERCALL_HALT,
+    UKVM_HYPERCALL_MAX
+};
+
+
+/* UKVM_HYPERCALL_PUTS */
+struct ukvm_puts {
+    /* IN */
+    UKVM_GUEST_PTR(const char *) data;
+    unsigned long len;
+};
+
+
+static int platform_puts(const char *buf, int n)
+{
+    struct ukvm_puts str;
+
+    str.data = (char *)buf;
+    str.len = n;
+
+    ukvm_do_hypercall(UKVM_HYPERCALL_PUTS, &str);
+
+    return str.len;
+}
+
+
+void
+cons_putc(int _c)
+{
+	char c = _c;
+	platform_puts(&c, 1);
+}
 
 void
 cons_init(void)
 {
-	int prefer_serial = 0;
-	int hypervisor;
-
-	hypervisor = hypervisor_detect();
-
-	/*
-	 * If running under Xen use the serial console.
-	 */
-	if (hypervisor == HYPERVISOR_XEN)
-		prefer_serial = 1;
-
-	/*
-	 * If the BIOS says no CRTC is present use the serial console if
-	 * available.
-	 */
-	if (bios_crtc_base == 0)
-		prefer_serial = 1;
-
-	if (prefer_serial && bios_com1_base != 0) {
-		cons_puts("Using serial console.");
-		serialcons_init(bios_com1_base, 115200);
-		vcons_putc = serialcons_putc;
-	}
-	bmk_printf_init(vcons_putc, NULL);
+	bmk_printf_init(cons_putc, NULL);
 }
 
-void
-cons_putc(int c)
-{
 
-	vcons_putc(c);
+
+static unsigned long strlen(const char * str)
+{
+    const char *s;
+    for (s = str; *s; ++s) {}
+    return(s - str);
 }
 
 void
 cons_puts(const char *s)
 {
-	int c;
+	platform_puts(s, strlen(s));
 
-	while ((c = *s++) != 0)
-		vcons_putc(c);
 }

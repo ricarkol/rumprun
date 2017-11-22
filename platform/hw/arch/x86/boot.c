@@ -100,6 +100,11 @@ void _start(void *arg)
 {
     platform_puts("hola\n", 5);
 
+	cons_init();
+    cons_putc('a');
+    cons_puts("hola las pelotas\n");
+	bmk_printf("rump kernel bare metal bootstrap\n\n");
+
     __asm__ __volatile__("cli; hlt");
     while (1);
 }
