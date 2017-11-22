@@ -32,81 +32,18 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/printf.h>
 
-#define UKVM_HYPERCALL_PIO_BASE 0x500
-
-#define UKVM_GUEST_PTR(T) T
-
-
-/*
- * On x86, 32-bit PIO is used as the hypercall mechanism. This only supports
- * sending 32-bit pointers; raise an assertion if a bigger pointer is used.
- *
- * On x86 the compiler-only memory barrier ("memory" clobber) is sufficient
- * across the hypercall boundary.
- */
-static inline void ukvm_do_hypercall(int n, volatile void *arg)
-{
-#    ifdef assert
-    assert(((uint64_t)arg <= UINT32_MAX));
-#    endif
-    __asm__ __volatile__("outl %0, %1"
-            :
-            : "a" ((uint32_t)((uint64_t)arg)),
-              "d" ((uint16_t)(UKVM_HYPERCALL_PIO_BASE + n))
-            : "memory");
-}
-
-enum ukvm_hypercall {
-    /* UKVM_HYPERCALL_RESERVED=0 */
-    UKVM_HYPERCALL_WALLTIME=1,
-    UKVM_HYPERCALL_PUTS,
-    UKVM_HYPERCALL_POLL,
-    UKVM_HYPERCALL_BLKINFO,
-    UKVM_HYPERCALL_BLKWRITE,
-    UKVM_HYPERCALL_BLKREAD,
-    UKVM_HYPERCALL_NETINFO,
-    UKVM_HYPERCALL_NETWRITE,
-    UKVM_HYPERCALL_NETREAD,
-    UKVM_HYPERCALL_HALT,
-    UKVM_HYPERCALL_MAX
-};
-
-
-/* UKVM_HYPERCALL_PUTS */
-struct ukvm_puts {
-    /* IN */
-    UKVM_GUEST_PTR(const char *) data;
-    unsigned long len;
-};
-
-
-
-
 void _start(void *arg);
-
-static int platform_puts(const char *buf, int n)
-{
-    struct ukvm_puts str;
-
-    str.data = (char *)buf;
-    str.len = n;
-
-    ukvm_do_hypercall(UKVM_HYPERCALL_PUTS, &str);
-
-    return str.len;
-}
 
 void _start(void *arg)
 {
-    platform_puts("hola\n", 5);
-
 	cons_init();
-    cons_putc('a');
-    cons_puts("hola las pelotas\n");
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
-    __asm__ __volatile__("cli; hlt");
-    while (1);
+	bmk_sched_init();
+	bmk_printf("done with bmk_sched_init\n\n");
+
+	__asm__ __volatile__("cli; hlt");
+	while (1);
 }
 
 void
