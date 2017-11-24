@@ -32,15 +32,18 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/printf.h>
 
-void _start(void *arg);
+int solo5_app_main(char *cmdline);
 
-void _start(void *arg)
+int solo5_app_main(char *cmdline)
 {
 	cons_init();
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
 	bmk_sched_init();
 	bmk_printf("done with bmk_sched_init\n\n");
+
+	bmk_sched_startmain(bmk_mainthread, cmdline);
+	bmk_printf("done with bmk_sched_startmain\n\n");
 
 	__asm__ __volatile__("cli; hlt");
 	while (1);

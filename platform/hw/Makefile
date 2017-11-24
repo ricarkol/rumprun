@@ -57,7 +57,7 @@ ${MAINOBJ}: ${OBJS} platformlibs
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@ \
 	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
 	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
-	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* \
+	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* -G solo5_app_main \
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
 clean: commonclean
