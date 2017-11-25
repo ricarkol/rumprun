@@ -32,15 +32,27 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/printf.h>
 
+#include <bmk-core/solo5.h>
+#include <bmk-core/pgalloc.h>
+
+#define HEAP_SIZE	(10e6) //10 MBs hardcoded XXX
+
 int solo5_app_main(char *cmdline);
 
 int solo5_app_main(char *cmdline)
 {
+	unsigned long heap;
+
 	cons_init();
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
 	bmk_sched_init();
-	bmk_printf("done with bmk_sched_init\n\n");
+	bmk_printf("2 done with bmk_sched_init 2\n\n");
+
+	heap = (unsigned long) solo5_malloc(HEAP_SIZE);
+	bmk_printf("done with heap alloc %lx\n\n", heap);
+
+	bmk_pgalloc_loadmem(heap, heap + HEAP_SIZE);
 
 	bmk_sched_startmain(bmk_mainthread, cmdline);
 	bmk_printf("done with bmk_sched_startmain\n\n");

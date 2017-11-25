@@ -21,8 +21,8 @@
 #ifndef SOLO5_H_INCLUDED
 #define SOLO5_H_INCLUDED
 
-#include <stddef.h>
-#include <stdint.h>
+//#include <stddef.h>
+//#include <stdint.h>
 
 /*
  * Solo5 public APIs.
@@ -105,7 +105,7 @@ int solo5_blk_rw(void);
  * Writes (n) bytes from (*buf) to the console. Returns number of bytes
  * actually written.
  */
-int solo5_console_write(const char *buf, size_t n);
+int solo5_console_write(const char *buf, unsigned long long n);
 
 /*
  * Exits the application.
@@ -115,10 +115,10 @@ void solo5_exit(void) __attribute__((noreturn));
 /*
  * Memory allocation. These APIs correspond to their standard C equivalents.
  */
-void *solo5_malloc(size_t);
+void *solo5_malloc(unsigned long long);
 void solo5_free(void *);
-void *solo5_calloc(size_t, size_t);
-void *solo5_realloc(void *, size_t);
+void *solo5_calloc(unsigned long long, unsigned long long);
+void *solo5_realloc(void *, unsigned long long);
 
 /*
  * Time.
