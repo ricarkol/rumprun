@@ -35,7 +35,7 @@
 #include <bmk-core/solo5.h>
 #include <bmk-core/pgalloc.h>
 
-#define HEAP_SIZE	(64e6) // 64 MBs hardcoded XXX
+#define HEAP_SIZE	(256e6) // 256 MBs hardcoded XXX
 
 int solo5_app_main(char *cmdline);
 
@@ -47,16 +47,14 @@ int solo5_app_main(char *cmdline)
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
 	bmk_sched_init();
-	bmk_printf("2 done with bmk_sched_init 2\n\n");
 
-	heap = (unsigned long) solo5_malloc(HEAP_SIZE);
-	bmk_printf("done with heap alloc %lx\n\n", heap);
+	heap = (unsigned long) solo5_calloc(HEAP_SIZE, 1);
+	bmk_assert(heap != 0);
 
-	// 3f2010
-	bmk_pgalloc_loadmem(0x3f3000, 0x3f3000 + HEAP_SIZE);
-        bmk_memsize = 0x3f3000 + HEAP_SIZE;
+	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER);
 
-	//bmk_pgalloc_loadmem(heap, heap + HEAP_SIZE);
+	bmk_pgalloc_loadmem(heap, heap + HEAP_SIZE);
+        bmk_memsize = HEAP_SIZE;
 
 	spl0();
 
