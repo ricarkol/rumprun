@@ -38,6 +38,7 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
+#include <bmk-core/solo5.h>
 
 void *bmk_mainstackbase;
 unsigned long bmk_mainstacksize;

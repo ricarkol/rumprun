@@ -35,7 +35,7 @@
 #include <bmk-core/solo5.h>
 #include <bmk-core/pgalloc.h>
 
-#define HEAP_SIZE	(10e6) //10 MBs hardcoded XXX
+#define HEAP_SIZE	(64e6) // 64 MBs hardcoded XXX
 
 int solo5_app_main(char *cmdline);
 
@@ -52,7 +52,13 @@ int solo5_app_main(char *cmdline)
 	heap = (unsigned long) solo5_malloc(HEAP_SIZE);
 	bmk_printf("done with heap alloc %lx\n\n", heap);
 
-	bmk_pgalloc_loadmem(heap, heap + HEAP_SIZE);
+	// 3f2010
+	bmk_pgalloc_loadmem(0x3f3000, 0x3f3000 + HEAP_SIZE);
+        bmk_memsize = 0x3f3000 + HEAP_SIZE;
+
+	//bmk_pgalloc_loadmem(heap, heap + HEAP_SIZE);
+
+	spl0();
 
 	bmk_sched_startmain(bmk_mainthread, cmdline);
 	bmk_printf("done with bmk_sched_startmain\n\n");
