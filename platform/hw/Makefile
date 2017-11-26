@@ -26,7 +26,7 @@ ARCHDIR?= ${MACHINE}
 HW_MACHINE_ARCH?= ${MACHINE_GNU_ARCH}
 
 LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
-SRCS+=		intr.c clock_subr.c kernel.c multiboot.c undefs.c
+SRCS+=		intr.c clock_subr.c solo5_kernel.c multiboot.c undefs.c
 
 include ../Makefile.inc
 include arch/${ARCHDIR}/Makefile.inc
