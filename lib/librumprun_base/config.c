@@ -358,6 +358,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 	ifname = cloner = type = method = NULL;
 	addr = mask = gw = NULL;
 
+	printf("%s %d\n", __FUNCTION__, __LINE__);
 	for (i = 0; i < objsize; i++, t+=2) {
 		const char *valuestr;
 		key = t;
@@ -396,10 +397,12 @@ handle_net(jsmntok_t *t, int left, char *data)
 		}
 	}
 
+	printf("%s %d\n", __FUNCTION__, __LINE__);
 	if (!ifname || !type || !method) {
 		errx(1, "net cfg missing vital data, not configuring");
 	}
 
+	printf("%s %d\n", __FUNCTION__, __LINE__);
 	if (cloner) {
 		if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
 			errx(1, "rumprun_config: ifcreate %s failed: %d",
@@ -407,6 +410,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 		}
 	}
 
+	printf("%s %d\n", __FUNCTION__, __LINE__);
 	if (strcmp(type, "inet") == 0) {
 		config_ipv4(ifname, method, addr, mask, gw);
 	} else if (strcmp(type, "inet6") == 0) {
@@ -414,6 +418,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 	} else {
 		errx(1, "network type \"%s\" not supported", type);
 	}
+	printf("%s %d\n", __FUNCTION__, __LINE__);
 
 	return 2*objsize + 1;
 }
@@ -826,4 +831,5 @@ rumprun_config(char *cmdline)
 	}
 
 	free(tokens);
+	printf("solo5 done with config\n");
 }

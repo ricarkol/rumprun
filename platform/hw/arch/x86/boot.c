@@ -35,11 +35,7 @@
 #include <bmk-core/solo5.h>
 #include <bmk-core/pgalloc.h>
 
-#include <net/if.h>
-
 #define HEAP_SIZE	(256e6) // 256 MBs hardcoded XXX
-
-extern int if_virt_solo5if_modcmd(int cmd, void *opaque);
 
 int solo5_app_main(char *cmdline);
 
@@ -61,14 +57,6 @@ int solo5_app_main(char *cmdline)
         bmk_memsize = HEAP_SIZE;
 
 	spl0();
-
-	//extern struct if_clone VIF_CLONER; /* XXX */
-
-	//if_clone_attach(&VIF_CLONER);
-
-	//if_clone_attach(&solo5_vif_cloner);
-	//if_virt_solo5if_modcmd(MODULE_CMD_INIT, NULL);
-	//if_virt_solo5if_modcmd(0, NULL);
 
 	bmk_sched_startmain(bmk_mainthread, cmdline);
 	bmk_printf("done with bmk_sched_startmain\n\n");
