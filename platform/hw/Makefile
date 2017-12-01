@@ -62,8 +62,7 @@ solo5libs: ${RROBJLIB}/librumpnet_solo5if/librumpnet_solo5if.a
 ${MAINOBJ}: ${OBJS} platformlibs solo5libs
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@ \
 	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
-	    -L${RROBJLIB}/librumpnet_solo5if/ \
-	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -lrumpnet_solo5if -Wl,--no-whole-archive
+	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* -G solo5_app_main \
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
