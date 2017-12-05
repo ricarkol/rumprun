@@ -62,81 +62,10 @@
 #endif
 
 struct virtif_user {
+	struct bmk_thread *viu_rcvr;
+	struct bmk_thread *viu_thr;
 	struct virtif_sc *viu_virtifsc;
-	int viu_devnum;
-
-	int viu_fd;
-	int viu_pipe[2];
-	pthread_t viu_rcvthr;
-
-	int viu_dying;
-
-	char viu_rcvbuf[9018]; /* jumbo frame max len */
 };
-
-static void *
-rcvthread(void *aaargh)
-{
-	struct virtif_user *viu = aaargh;
-	struct pollfd pfd[2];
-	struct iovec iov;
-	ssize_t nn = 0;
-	int prv;
-
-	//rumpuser_component_kthread();
-
-	/* give us a rump kernel context */
-	rumpuser__hyp.hyp_schedule();
-	rumpuser__hyp.hyp_lwproc_newlwp(0);
-	rumpuser__hyp.hyp_unschedule();
-
-	pfd[0].fd = viu->viu_fd;
-	pfd[0].events = POLLIN;
-	pfd[1].fd = viu->viu_pipe[0];
-	pfd[1].events = POLLIN;
-
-	while (!viu->viu_dying) {
-		prv = poll(pfd, 2, -1);
-		if (prv == 0)
-			continue;
-		if (prv == -1) {
-			/* XXX */
-			fprintf(stderr, "virt%d: poll error: %d\n",
-			    viu->viu_devnum, errno);
-			sleep(1);
-			continue;
-		}
-		if (pfd[1].revents & POLLIN)
-			continue;
-
-		//nn = read(viu->viu_fd,
-		//    viu->viu_rcvbuf, sizeof(viu->viu_rcvbuf));
-		// int solo5_net_read_sync(uint8_t *data, int *n);
-		if (nn == -1 && errno == EAGAIN)
-			continue;
-
-		if (nn < 1) {
-			/* XXX */
-			fprintf(stderr, "virt%d: receive failed\n",
-			    viu->viu_devnum);
-			sleep(1);
-			continue;
-		}
-		iov.iov_base = viu->viu_rcvbuf;
-		iov.iov_len = nn;
-
-		//rumpuser_component_schedule(NULL);
-		rumpuser__hyp.hyp_schedule();
-		VIF_DELIVERPKT(viu->viu_virtifsc, &iov, 1);
-		rumpuser__hyp.hyp_unschedule();
-		//rumpuser_component_unschedule();
-	}
-
-	assert(viu->viu_dying);
-
-	//rumpuser_component_kthread_release();
-	return NULL;
-}
 
 int
 VIFHYPER_MAC(uint8_t **enaddr)
@@ -157,49 +86,35 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	struct virtif_user **viup)
 {
 	struct virtif_user *viu = NULL;
-	int devnum;
 	int nlocks;
-	int rv;
 
 	rumpkern_unsched(&nlocks, NULL);
-	//cookie = rumpuser_component_unschedule();
-
-	/*
-	 * Since this interface doesn't do LINKSTR, we know devstr to be
-	 * well-formatted.
-	 */
-	devnum = atoi(devstr);
 
 	viu = calloc(1, sizeof(*viu));
-	if (viu == NULL) {
-		rv = errno;
-		goto oerr1;
-	}
+	if (viu == NULL)
+		solo5_exit();
+
 	viu->viu_virtifsc = vif_sc;
 
-	viu->viu_devnum = devnum;
-
-	//if (pipe(viu->viu_pipe) == -1) {
-	//	rv = errno;
-	//	goto oerr3;
-	//}
-
-if (0)
-	if ((rv = pthread_create(&viu->viu_rcvthr, NULL, rcvthread, viu)) != 0)
-		goto oerr1;
-
-	//rumpuser_component_schedule(cookie);
 	rumpkern_sched(nlocks, NULL);
 	*viup = viu;
 	return 0;
+}
 
- oerr1:
-	close(viu->viu_pipe[0]);
-	close(viu->viu_pipe[1]);
-	free(viu);
-	//rumpuser_component_schedule(cookie);
-	//return rumpuser_component_errtrans(rv);
-	return rv;
+void
+VIFHYPER_RECEIVE(struct virtif_user *viu)
+{
+	struct iovec iov;
+	int len;
+	
+	uint8_t *data = solo5_malloc(9000); // jumbo frame XXX free this!?!?!
+
+	if (solo5_net_read_sync(data, &len) != 0)
+		solo5_exit();
+	iov.iov_base = data;
+	iov.iov_len = len;
+
+	VIF_DELIVERPKT(viu->viu_virtifsc, &iov, 1);
 }
 
 void
@@ -256,35 +171,11 @@ out:
 int
 VIFHYPER_DYING(struct virtif_user *viu)
 {
-	//void *cookie = rumpuser_component_unschedule();
-
-	viu->viu_dying = 1;
-#if 0
-	if (write(viu->viu_pipe[1],
-	    &viu->viu_dying, sizeof(viu->viu_dying)) == -1) {
-		/*
-		 * this is here mostly to avoid a compiler warning
-		 * about ignoring the return value of write()
-		 */
-		fprintf(stderr, "%s: failed to signal thread\n",
-		    VIF_STRING(VIFHYPER_DYING));
-	}
-#endif
-	//rumpuser_component_schedule(cookie);
-
 	return 0;
 }
 
 void
 VIFHYPER_DESTROY(struct virtif_user *viu)
 {
-	//void *cookie = rumpuser_component_unschedule();
-
-	pthread_join(viu->viu_rcvthr, NULL);
-	close(viu->viu_pipe[0]);
-	close(viu->viu_pipe[1]);
-	free(viu);
-
-	//rumpuser_component_schedule(cookie);
 }
 #endif
