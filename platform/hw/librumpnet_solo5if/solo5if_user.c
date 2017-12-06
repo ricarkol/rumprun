@@ -86,9 +86,9 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	struct virtif_user **viup)
 {
 	struct virtif_user *viu = NULL;
-	int nlocks;
+	//int nlocks;
 
-	rumpkern_unsched(&nlocks, NULL);
+	//rumpkern_unsched(&nlocks, NULL);
 
 	viu = calloc(1, sizeof(*viu));
 	if (viu == NULL) {
@@ -98,7 +98,7 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu->viu_virtifsc = vif_sc;
 
-	rumpkern_sched(nlocks, NULL);
+	//rumpkern_sched(nlocks, NULL);
 	*viup = viu;
 	return 0;
 }
@@ -108,6 +108,8 @@ VIFHYPER_RECEIVE(void)
 {
 	struct iovec iov[1];
 	int len = 9000;
+
+	solo5_console_write("receive ___\n",13);
 	
 	uint8_t *data = bmk_memalloc(9000, 0, BMK_MEMWHO_RUMPKERN);
 	if (data == NULL) {
@@ -132,11 +134,11 @@ VIFHYPER_SEND(struct virtif_user *viu,
 	struct iovec *iov, size_t iovlen)
 {
 	size_t tlen, i;
-	int nlocks;
+	//int nlocks;
 	void *d;
 	char *d0;
 
-	rumpkern_unsched(&nlocks, NULL);
+	//rumpkern_unsched(&nlocks, NULL);
 	/*
 	 * solo5 doesn't do scatter-gather, so just simply
 	 * copy the data into one lump here.  drop packet if we
@@ -175,7 +177,8 @@ VIFHYPER_SEND(struct virtif_user *viu,
 		solo5_console_write("\tsend\n", 6);
 
 out:
-	rumpkern_sched(nlocks, NULL);
+	//rumpkern_sched(nlocks, NULL);
+	return;
 }
 
 int

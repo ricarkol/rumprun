@@ -65,7 +65,7 @@ void rumpcomp_solo5if_receive(void);
 void
 bmk_platform_cpu_block(bmk_time_t until_ns)
 {
-	if (solo5_poll(until_ns) == 1) {
+	if (solo5_poll(until_ns)) {
 		rumpcomp_solo5if_receive();
 	}
 }

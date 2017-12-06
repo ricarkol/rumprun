@@ -376,7 +376,6 @@ VIF_DELIVERPKT(struct iovec *iov, size_t iovlen)
 		}
 	}
 
-/*
 	struct ether_header *eth;
 	eth = mtod(m, struct ether_header *);
 	if (memcmp(eth->ether_dhost, CLLADDR(ifp->if_sadl),
@@ -390,8 +389,6 @@ VIF_DELIVERPKT(struct iovec *iov, size_t iovlen)
 	} else {
 		passup = false;
 	}
-*/
-	passup = true;
 
 	if (passup) {
 		ifp->if_ipackets++;
