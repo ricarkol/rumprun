@@ -72,6 +72,7 @@ struct if_clone VIF_CLONER =
     IF_CLONE_INITIALIZER(VIF_NAME, virtif_clone, virtif_unclone);
 
 char *solo5_net_mac_str(void);
+void solo5_exit(void) __attribute__((noreturn));
 int atoi(const char *nptr);
 
 static int
@@ -339,27 +340,33 @@ virtif_stop(struct ifnet *ifp, int disable)
 }
 
 void
-VIF_DELIVERPKT(struct virtif_sc *sc, struct iovec *iov, size_t iovlen)
+VIF_DELIVERPKT(struct iovec *iov, size_t iovlen)
 {
-	struct ifnet *ifp = &sc->sc_ec.ec_if;
-	struct ether_header *eth;
+	struct ifnet *ifp;
+
 	struct mbuf *m;
 	size_t i;
 	int off, olen;
 	bool passup;
-	const int align
-	    = ALIGN(sizeof(struct ether_header)) - sizeof(struct ether_header);
+
+	ifp = ifunit("solo5if0");
+	if (ifp == NULL) {
+		panic("failed on bmk_platform_cpu_block");
+	}
 
 	if ((ifp->if_flags & IFF_RUNNING) == 0)
 		return;
 
 	m = m_gethdr(M_NOWAIT, MT_DATA);
-	if (m == NULL)
+	if (m == NULL) {
 		return; /* drop packet */
+	}
 	m->m_len = m->m_pkthdr.len = 0;
 
-	for (i = 0, off = align; i < iovlen; i++) {
+	for (i = 0, off = 0; i < iovlen; i++) {
 		olen = m->m_pkthdr.len;
+		printf("receive len=%lu base=%lu\n",(unsigned long)iov[i].iov_len,
+			(unsigned long)iov[i].iov_base);
 		m_copyback(m, off, iov[i].iov_len, iov[i].iov_base);
 		off += iov[i].iov_len;
 		if (olen + off != m->m_pkthdr.len) {
@@ -368,10 +375,9 @@ VIF_DELIVERPKT(struct virtif_sc *sc, struct iovec *iov, size_t iovlen)
 			return;
 		}
 	}
-	m->m_data += align;
-	m->m_pkthdr.len -= align;
-	m->m_len -= align;
 
+/*
+	struct ether_header *eth;
 	eth = mtod(m, struct ether_header *);
 	if (memcmp(eth->ether_dhost, CLLADDR(ifp->if_sadl),
 	    ETHER_ADDR_LEN) == 0) {
@@ -384,17 +390,16 @@ VIF_DELIVERPKT(struct virtif_sc *sc, struct iovec *iov, size_t iovlen)
 	} else {
 		passup = false;
 	}
+*/
+	passup = true;
 
 	if (passup) {
-		int bound;
 		ifp->if_ipackets++;
 		m_set_rcvif(m, ifp);
 		KERNEL_LOCK(1, NULL);
-		/* Prevent LWP migrations between CPUs for psref(9) */
-		bound = curlwp_bind();
 		bpf_mtap(ifp, m);
 		if_input(ifp, m);
-		curlwp_bindx(bound);
+		//ether_input(ifp, m);
 		KERNEL_UNLOCK_LAST(NULL);
 	} else {
 		m_freem(m);

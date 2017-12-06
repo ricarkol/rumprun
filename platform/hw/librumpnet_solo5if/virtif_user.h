@@ -37,6 +37,6 @@ int	VIFHYPER_DYING(struct virtif_user *);
 void	VIFHYPER_DESTROY(struct virtif_user *);
 
 void	VIFHYPER_SEND(struct virtif_user *, struct iovec *, size_t);
-void	VIFHYPER_RECEIVE(struct virtif_user *);
+void	VIFHYPER_RECEIVE(void);
 
-void	VIF_DELIVERPKT(struct virtif_sc *, struct iovec *, size_t);
+void	VIF_DELIVERPKT(struct iovec *, size_t);

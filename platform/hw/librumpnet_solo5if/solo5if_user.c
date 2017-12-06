@@ -91,8 +91,10 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	rumpkern_unsched(&nlocks, NULL);
 
 	viu = calloc(1, sizeof(*viu));
-	if (viu == NULL)
+	if (viu == NULL) {
+		solo5_console_write("create  fail\n",13);
 		solo5_exit();
+	}
 
 	viu->viu_virtifsc = vif_sc;
 
@@ -102,19 +104,27 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 }
 
 void
-VIFHYPER_RECEIVE(struct virtif_user *viu)
+VIFHYPER_RECEIVE(void)
 {
-	struct iovec iov;
-	int len;
+	struct iovec iov[1];
+	int len = 9000;
 	
-	uint8_t *data = solo5_malloc(9000); // jumbo frame XXX free this!?!?!
-
-	if (solo5_net_read_sync(data, &len) != 0)
+	uint8_t *data = bmk_memalloc(9000, 0, BMK_MEMWHO_RUMPKERN);
+	if (data == NULL) {
+		solo5_console_write("malloc fail\n",13);
 		solo5_exit();
-	iov.iov_base = data;
-	iov.iov_len = len;
+	}
 
-	VIF_DELIVERPKT(viu->viu_virtifsc, &iov, 1);
+	if (solo5_net_read_sync(data, &len) != 0) {
+		solo5_console_write("receive fail\n",13);
+		solo5_exit();
+	}
+	iov[0].iov_base = data;
+	iov[0].iov_len = len;
+
+	//rumpuser__hyp.hyp_schedule();
+	VIF_DELIVERPKT(iov, 1);
+	//rumpuser__hyp.hyp_unschedule();
 }
 
 void

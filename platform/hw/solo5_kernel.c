@@ -29,6 +29,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/solo5.h>
 
+#include <net/if.h>
+
 int spldepth = 1;
 
 unsigned long
@@ -58,10 +60,14 @@ x86_initclocks(void)
 {
 }
 
+void rumpcomp_solo5if_receive(void);
+
 void
 bmk_platform_cpu_block(bmk_time_t until_ns)
 {
-	solo5_poll(until_ns);
+	if (solo5_poll(until_ns) == 1) {
+		rumpcomp_solo5if_receive();
+	}
 }
 
 bmk_time_t bmk_platform_cpu_clock_monotonic(void)
