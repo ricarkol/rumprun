@@ -83,8 +83,6 @@ virtif_create(struct ifnet *ifp)
 	struct virtif_sc *sc = ifp->if_softc;
 	int error;
 
-	printf("SOLO5 virtif_create\n");
-
 	if (sc->sc_viu)
 		panic("%s: already created", ifp->if_xname);
 
@@ -115,7 +113,6 @@ virtif_clone(struct if_clone *ifc, int num)
 	struct ifnet *ifp;
 	int error = 0;
 
-	printf("SOLO5 virtif_clone\n");
 	sc = kmem_zalloc(sizeof(*sc), KM_SLEEP);
 	sc->sc_num = num;
 	ifp = &sc->sc_ec.ec_if;
@@ -206,7 +203,6 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 #endif
 
 	case SIOCGLINKSTR:
-		printf("ukvmif:%s:SIOCGLINKSTR: %lx\n", __FUNCTION__, cmd);
 		ifd = data;
 
 		if (!sc->sc_linkstr) {
@@ -229,7 +225,6 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 		    ifd->ifd_data, MIN(ifd->ifd_len,linkstrlen), NULL);
 		break;
 	case SIOCSLINKSTR:
-		printf("ukvmif:%s:SIOCSLINKSTR: %lx\n", __FUNCTION__, cmd);
 		if (ifp->if_flags & IFF_UP) {
 			rv = EBUSY;
 			break;
@@ -272,11 +267,9 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 #endif /* RUMP_VIF_LINKSTR */
 	default:
 		if (!sc->sc_linkstr) {
-			printf("ukvmif:%s:default: %lx !sc->sc_linkstr\n", __FUNCTION__, cmd);
 			rv = ENXIO;
 		} else {
 			rv = ether_ioctl(ifp, cmd, data);
-			printf("ukvmif:%s:default: %lx rv=%d\n", __FUNCTION__, cmd, rv);
 		}
 		if (rv == ENETRESET)
 			rv = 0;
@@ -365,8 +358,6 @@ VIF_DELIVERPKT(struct iovec *iov, size_t iovlen)
 
 	for (i = 0, off = 0; i < iovlen; i++) {
 		olen = m->m_pkthdr.len;
-		printf("receive len=%lu base=%lu\n",(unsigned long)iov[i].iov_len,
-			(unsigned long)iov[i].iov_base);
 		m_copyback(m, off, iov[i].iov_len, iov[i].iov_base);
 		off += iov[i].iov_len;
 		if (olen + off != m->m_pkthdr.len) {
@@ -419,7 +410,6 @@ VIF_MODCMD(modcmd_t cmd, void *opaque)
 
 	switch (cmd) {
 	case MODULE_CMD_INIT:
-		printf("SOLO5 module init calling if_clone_attach\n");
 		if_clone_attach(&VIF_CLONER);
 		break;
 	case MODULE_CMD_FINI:

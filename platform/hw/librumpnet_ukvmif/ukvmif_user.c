@@ -111,8 +111,6 @@ VIFHYPER_RECEIVE(void)
 	struct iovec iov[1];
 	int len = PKT_BUFFER_LEN;
 
-	solo5_console_write("receive ___\n",13);
-	
 	uint8_t *data = bmk_memalloc(PKT_BUFFER_LEN, 0, BMK_MEMWHO_RUMPKERN);
 	if (data == NULL) {
 		solo5_console_write("malloc fail\n",13);
@@ -173,10 +171,6 @@ VIFHYPER_SEND(struct virtif_user *viu,
 
 	if (iovlen != 1)
 		bmk_memfree(d, BMK_MEMWHO_RUMPKERN);
-
-	solo5_console_write("send\n", 5);
-        for (i=0; i<iovlen; i++)
-		solo5_console_write("\tsend\n", 6);
 
 out:
 	//rumpkern_sched(nlocks, NULL);
