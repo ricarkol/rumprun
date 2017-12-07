@@ -281,27 +281,23 @@ config_ipv4(const char *ifname, const char *method,
 			errx(1, "configuring dhcp for %s failed: %d",
 			    ifname, rv);
 	} else {
-		printf("%s %d\n", __FUNCTION__, __LINE__);
 		if (strcmp(method, "static") != 0) {
 			errx(1, "method \"static\" or \"dhcp\" expected, "
 			    "got \"%s\"", method);
 		}
 
-		printf("%s %d\n", __FUNCTION__, __LINE__);
 		if (!addr || !mask) {
 			errx(1, "static net cfg missing addr or mask");
 		}
-		printf("%s %d %s %s %d\n", __FUNCTION__, __LINE__, ifname, addr, atoi(mask));
+
 		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
 		    addr, atoi(mask))) != 0) {
 			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
 			    ifname, addr, mask);
 		}
-		printf("%s %d\n", __FUNCTION__, __LINE__);
 		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
 			errx(1, "gw \"%s\" addition failed", gw);
 		}
-		printf("%s %d\n", __FUNCTION__, __LINE__);
 	}
 }
 
@@ -412,9 +408,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 	}
 
 	if (strcmp(type, "inet") == 0) {
-		printf("about to call config_ipv4\n");
 		config_ipv4(ifname, method, addr, mask, gw);
-		printf("just called config_ipv4\n");
 	} else if (strcmp(type, "inet6") == 0) {
 		config_ipv6(ifname, method, addr, mask, gw);
 	} else {
@@ -752,7 +746,7 @@ void
 rumprun_config(char *cmdline)
 {
 	char *cfg;
-	//struct rumprun_exec *rre;
+	struct rumprun_exec *rre;
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
 	jsmntok_t *t;
@@ -823,14 +817,13 @@ rumprun_config(char *cmdline)
 	/*
 	 * Before we start running things, perform some sanity checks
 	 */
-	//rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
-	//if (rre == NULL) {
-	//	warnx(1, "rumprun_config: no bins");
-	//}
-	//if (rre->rre_flags & RUMPRUN_EXEC_PIPE) {
-	//	errx(1, "rumprun_config: last bin may not output to pipe");
-	//}
+	rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
+	if (rre == NULL) {
+		errx(1, "rumprun_config: no bins");
+	}
+	if (rre->rre_flags & RUMPRUN_EXEC_PIPE) {
+		errx(1, "rumprun_config: last bin may not output to pipe");
+	}
 
 	free(tokens);
-	printf("solo5 done with config\n");
 }
