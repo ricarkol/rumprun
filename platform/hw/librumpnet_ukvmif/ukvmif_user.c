@@ -140,7 +140,7 @@ VIFHYPER_SEND(struct virtif_user *viu,
 
 	//rumpkern_unsched(&nlocks, NULL);
 	/*
-	 * solo5 doesn't do scatter-gather, so just simply
+	 * ukvm doesn't do scatter-gather, so just simply
 	 * copy the data into one lump here.  drop packet if we
 	 * can't allocate temp memory space.
 	 */

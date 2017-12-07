@@ -28,7 +28,7 @@ HW_MACHINE_ARCH?= ${MACHINE_GNU_ARCH}
 LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
 SRCS+=		intr.c clock_subr.c solo5_kernel.c multiboot.c undefs.c
 
-INSTALLTGTS=    librumpnet_solo5if_install
+INSTALLTGTS=    librumpnet_ukvmif_install
 
 include ../Makefile.inc
 include arch/${ARCHDIR}/Makefile.inc
@@ -55,9 +55,9 @@ ${RROBJ}/platform/%.o: %.c
 ${RROBJ}/platform/%.o: %.S
 	${CC} -D_LOCORE ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
-$(eval $(call BUILDLIB_target,librumpnet_solo5if,.))
+$(eval $(call BUILDLIB_target,librumpnet_ukvmif,.))
 
-solo5libs: ${RROBJLIB}/librumpnet_solo5if/librumpnet_solo5if.a
+solo5libs: ${RROBJLIB}/librumpnet_ukvmif/librumpnet_ukvmif.a
 
 ${MAINOBJ}: ${OBJS} platformlibs solo5libs
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@ \

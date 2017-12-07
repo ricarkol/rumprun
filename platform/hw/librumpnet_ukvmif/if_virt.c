@@ -206,7 +206,7 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 #endif
 
 	case SIOCGLINKSTR:
-		printf("solo5if:%s:SIOCGLINKSTR: %lx\n", __FUNCTION__, cmd);
+		printf("ukvmif:%s:SIOCGLINKSTR: %lx\n", __FUNCTION__, cmd);
 		ifd = data;
 
 		if (!sc->sc_linkstr) {
@@ -229,7 +229,7 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 		    ifd->ifd_data, MIN(ifd->ifd_len,linkstrlen), NULL);
 		break;
 	case SIOCSLINKSTR:
-		printf("solo5if:%s:SIOCSLINKSTR: %lx\n", __FUNCTION__, cmd);
+		printf("ukvmif:%s:SIOCSLINKSTR: %lx\n", __FUNCTION__, cmd);
 		if (ifp->if_flags & IFF_UP) {
 			rv = EBUSY;
 			break;
@@ -272,11 +272,11 @@ virtif_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 #endif /* RUMP_VIF_LINKSTR */
 	default:
 		if (!sc->sc_linkstr) {
-			printf("solo5if:%s:default: %lx !sc->sc_linkstr\n", __FUNCTION__, cmd);
+			printf("ukvmif:%s:default: %lx !sc->sc_linkstr\n", __FUNCTION__, cmd);
 			rv = ENXIO;
 		} else {
 			rv = ether_ioctl(ifp, cmd, data);
-			printf("solo5if:%s:default: %lx rv=%d\n", __FUNCTION__, cmd, rv);
+			printf("ukvmif:%s:default: %lx rv=%d\n", __FUNCTION__, cmd, rv);
 		}
 		if (rv == ENETRESET)
 			rv = 0;
@@ -349,7 +349,7 @@ VIF_DELIVERPKT(struct iovec *iov, size_t iovlen)
 	int off, olen;
 	bool passup;
 
-	ifp = ifunit("solo5if0");
+	ifp = ifunit("ukvmif0");
 	if (ifp == NULL) {
 		panic("failed on bmk_platform_cpu_block");
 	}
