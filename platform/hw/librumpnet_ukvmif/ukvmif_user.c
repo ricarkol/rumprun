@@ -64,8 +64,6 @@
 #define PKT_BUFFER_LEN 1526
 
 struct virtif_user {
-	struct bmk_thread *viu_rcvr;
-	struct bmk_thread *viu_thr;
 	struct virtif_sc *viu_virtifsc;
 };
 
@@ -88,11 +86,8 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	struct virtif_user **viup)
 {
 	struct virtif_user *viu = NULL;
-	//int nlocks;
 
-	//rumpkern_unsched(&nlocks, NULL);
-
-	viu = calloc(1, sizeof(*viu));
+	viu = bmk_memalloc(sizeof(*viu), 0, BMK_MEMWHO_RUMPKERN);
 	if (viu == NULL) {
 		solo5_console_write("create  fail\n",13);
 		solo5_exit();
@@ -100,7 +95,6 @@ VIFHYPER_CREATE(const char *devstr, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu->viu_virtifsc = vif_sc;
 
-	//rumpkern_sched(nlocks, NULL);
 	*viup = viu;
 	return 0;
 }
