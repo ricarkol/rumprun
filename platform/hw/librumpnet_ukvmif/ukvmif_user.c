@@ -61,6 +61,8 @@
 #error VIFHYPER_REVISION mismatch
 #endif
 
+#define PKT_BUFFER_LEN 1526
+
 struct virtif_user {
 	struct bmk_thread *viu_rcvr;
 	struct bmk_thread *viu_thr;
@@ -107,11 +109,11 @@ void
 VIFHYPER_RECEIVE(void)
 {
 	struct iovec iov[1];
-	int len = 9000;
+	int len = PKT_BUFFER_LEN;
 
 	solo5_console_write("receive ___\n",13);
 	
-	uint8_t *data = bmk_memalloc(9000, 0, BMK_MEMWHO_RUMPKERN);
+	uint8_t *data = bmk_memalloc(PKT_BUFFER_LEN, 0, BMK_MEMWHO_RUMPKERN);
 	if (data == NULL) {
 		solo5_console_write("malloc fail\n",13);
 		solo5_exit();
