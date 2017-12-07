@@ -6,7 +6,7 @@ ifeq (${RRDEST},)
 $(error invalid RUMPRUN_MKCONF)
 endif
 
-DBG?=	 -O2 -g
+DBG?=	 -O0 -g -ggdb
 CFLAGS+= -std=gnu99 ${DBG}
 CFLAGS+= -fno-stack-protector -ffreestanding
 CXXFLAGS+= -fno-stack-protector -ffreestanding
