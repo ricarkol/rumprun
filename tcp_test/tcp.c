@@ -29,25 +29,14 @@ int main(int argc , char *argv[])
 		return 1;
 	}
 
-	//write(sockfd, "asdf", 4); // write(fd, char[]*, len);
 	write(sockfd, "GET /\r\n", strlen("GET /\r\n")); // write(fd, char[]*, len);  
-	ret = recv(sockfd, buffer, sizeof(buffer), 0);
-	//printf("recv()'d %d bytes of data in buf\n", ret);
-	//printf(buffer);
-	//fflush(stdout);
-	//sleep(1);
-	close(sockfd);
-	printf("bye\n");
-	
-/*
-	write(sockfd, "GET /\r\n", strlen("GET /\r\n")); // write(fd, char[]*, len);  
-	bzero(buffer, BUFFER_SIZE);
+	write(sockfd, "Accept: */*\r\n", strlen("Accept: */*\r\n")); // write(fd, char[]*, len);  
+	write(sockfd, "\r\n", strlen("\r\n")); // write(fd, char[]*, len);
 	
 	while(read(sockfd, buffer, BUFFER_SIZE - 1) != 0){
 		printf("%s", buffer);
 		bzero(buffer, BUFFER_SIZE);
 	}
-*/
-	puts("Connected");
+	close(sockfd);
 	return 0;
 }
