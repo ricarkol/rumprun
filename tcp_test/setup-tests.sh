@@ -34,13 +34,10 @@ Linux)
     ip tuntap add tap100 mode tap
     ip addr add 10.0.0.1/24 dev tap100
     ip link set dev tap100 up
-    ;;
-FreeBSD)
-    kldload vmm
-    kldload if_tap
-    kldload nmdm
-    sysctl -w net.link.tap.up_on_open=1
-    ifconfig tap100 create 10.0.0.1/24 link0 up
+    modprobe dummy
+    ip link set name eth10 dev dummy0
+    ip addr add 10.0.0.4/16 dev eth10
+    ip link set eth10 up
     ;;
 *)
     exit 1
