@@ -17,6 +17,12 @@ run_ukvm: solo5
 	touch dummy
 	./ukvm-bin ./helloer-rumprun.bin
 
+.PHONY: run_gdb
+run_gdb: solo5
+	touch dummy
+	gdb -tui --ex="b ukvm_elf_load" --ex="r helloer-rumprun.bin > /dev/null" --ex="finish" --ex="add-symbol-file helloer-rumprun.bin 0x100000" ./ukvm-bin
+
+
 .PHONY: clean
 clean:
 	rm -f helloer-rumprun.bin helloer-rumprun dummy
