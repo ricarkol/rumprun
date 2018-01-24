@@ -1,7 +1,8 @@
 .PHONY: solo5
 solo5:
-	x86_64-rumprun-netbsd-gcc -o helloer-rumprun helloer.c
-	rumprun-bake solo5_net helloer-rumprun.bin helloer-rumprun
+	x86_64--netbsd-gcc -o helloer-rumprun helloer.c
+	~/research/rumprun/obj-amd64-solo5-solo5/app-tools/rumprun-bake solo5_net helloer-rumprun.bin helloer-rumprun
+	#rumprun-bake solo5_net helloer-rumprun.bin helloer-rumprun
 
 .PHONY: hw
 hw:

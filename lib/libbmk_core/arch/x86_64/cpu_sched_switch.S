@@ -37,15 +37,17 @@
 
 #include <bmk-core/amd64/asm.h>
 
+/*
 ENTRY(bmk_cpu_sched_bouncer)
 	popq %rdi
 	popq %rbx
-	pushq $0			/* correct stack alignment for SSE */
+	pushq $0			// correct stack alignment for SSE
 	pushq $0
 	xorq %rbp,%rbp
 	call *%rbx
 	call bmk_sched_exit
 END(bmk_cpu_sched_bouncer)
+*/
 
 ENTRY(bmk_cpu_sched_switch)
 	pushq %rbp
@@ -54,10 +56,11 @@ ENTRY(bmk_cpu_sched_switch)
 	pushq %r13
 	pushq %r14
 	pushq %r15
-	movq %rsp, (%rdi)               /* save ESP */
-	movq (%rsi), %rsp               /* restore ESP */
-	movq $1f, 8(%rdi)               /* save EIP */
-	pushq 8(%rsi)                   /* restore EIP */
+
+	movq %rsp, (%rdi)               
+	movq (%rsi), %rsp               
+	//movq $1f, 8(%rdi)              
+	pushq 8(%rsi)                 
 	ret
 1:
 	popq %r15
