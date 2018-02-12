@@ -1,6 +1,6 @@
 .PHONY: setup
 setup:
-	sudo bash setup-tests.sh
+	sudo bash setup-tests.sh || true
 
 .PHONY: solo5
 solo5: setup
@@ -22,7 +22,7 @@ run_hw: hw
 .PHONY: run_ukvm
 run_ukvm: solo5
 	touch dummy
-	time ../ukvm-bin --disk=dummy --net=tap100 tcp-rumprun.bin '{"cmdline":"","net":{"if":"ukvmif0","cloner":"True","type":"inet","method":"static","addr":"10.0.0.2","mask":"16"}}' 
+	../ukvm-bin --disk=dummy --net=tap100 tcp-rumprun.bin '{"cmdline":"","net":{"if":"ukvmif0","cloner":"True","type":"inet","method":"static","addr":"10.0.0.2","mask":"16"}}'
 
 .PHONY: clean
 clean:
