@@ -47,6 +47,10 @@ run_seccomp: blk-rumprun.seccomp test.iso test.ext2
 	../ukvm-bin.seccomp --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	e2tail test.ext2:/bla
 
+.PHONY: run_seccomp_gdb
+run_seccomp_gdb: blk-rumprun.seccomp test.iso test.ext2
+	gdb -tui --ex="b ukvm_elf_load" --ex="r --mem=64 --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
+
 .PHONY: run_ukvm_rr
 run_ukvm_rr: ukvm_rr
 	touch dummy
