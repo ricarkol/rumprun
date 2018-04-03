@@ -23,7 +23,7 @@ run_ukvm: helloer-rumprun.ukvm
 
 run_seccomp: helloer-rumprun.seccomp
 	touch dummy
-	./ukvm-bin.seccomp ./helloer-rumprun.seccomp
+	./ukvm-bin.seccomp ./helloer-rumprun.seccomp '{"cmdline":"bla","env":"RUMPUSER_PARAM_NCPU=2"}'
 
 failing_timer.seccomp: failing_timer.c
 	x86_64-rumprun-netbsd-gcc -o failing_timer failing_timer.c
@@ -35,7 +35,7 @@ run_ukvm_rr: ukvm_rr
 
 run_gdb: helloer-rumprun.seccomp
 	touch dummy
-	gdb -tui --ex="b ukvm_elf_load" --ex="r helloer-rumprun.seccomp > /dev/null" --ex="finish" --ex="add-symbol-file helloer-rumprun.seccomp 0x100000" ./ukvm-bin.seccomp
+	gdb -tui --ex="b ukvm_elf_load" --ex="r helloer-rumprun.seccomp '{\"cmdline\":\"bla\",\"env\":\"RUMP_VERBOSE=9\"}' > /dev/null" --ex="finish" --ex="add-symbol-file helloer-rumprun.seccomp 0x100000" ./ukvm-bin.seccomp
 
 run_gdb_timer: failing_timer.seccomp
 	touch dummy

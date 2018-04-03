@@ -43,13 +43,17 @@ run_ukvm: blk-rumprun.ukvm test.iso test.ext2
 .PHONY: run_seccomp
 run_seccomp: blk-rumprun.seccomp test.iso test.ext2
 	touch dummy
-	#../ukvm-bin.seccomp --disk=test.iso --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
+	../ukvm-bin.seccomp --disk=test.iso --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
+
+.PHONY: run_seccomp_ext2
+run_seccomp_ext2: blk-rumprun.seccomp test.iso test.ext2
 	../ukvm-bin.seccomp --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	e2tail test.ext2:/bla
 
 .PHONY: run_seccomp_gdb
 run_seccomp_gdb: blk-rumprun.seccomp test.iso test.ext2
-	gdb -tui --ex="b ukvm_elf_load" --ex="r --mem=64 --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
+	gdb -tui --ex="b ukvm_elf_load" --ex="r --mem=64 --disk=test.iso --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
+	#gdb -tui --ex="b ukvm_elf_load" --ex="r --mem=64 --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
 
 .PHONY: run_ukvm_rr
 run_ukvm_rr: ukvm_rr
