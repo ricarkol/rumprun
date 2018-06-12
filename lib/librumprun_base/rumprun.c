@@ -76,6 +76,32 @@ __weak_alias(rump_init_server,rumprun_enosys);
 
 int rumprun_cold = 1;
 
+enum rump_component_type {
+	RUMP_COMPONENT_DEV,
+	RUMP_COMPONENT_DEV_AFTERMAINBUS,
+	RUMP_COMPONENT_NET,
+	RUMP_COMPONENT_NET_ROUTE,
+	RUMP_COMPONENT_NET_IF,
+	RUMP_COMPONENT_NET_IFCFG,
+	RUMP_COMPONENT_VFS,
+	RUMP_COMPONENT_KERN,
+	RUMP_COMPONENT_KERN_VFS,
+	RUMP_COMPONENT_POSTINIT,
+	RUMP_COMPONENT_SYSCALL,
+
+	RUMP__FACTION_DEV,
+	RUMP__FACTION_VFS,
+	RUMP__FACTION_NET,
+
+	RUMP_COMPONENT_MAX,
+};
+
+void
+rump_component_init(enum rump_component_type);
+
+int
+rump_devnull_init(void);
+
 void
 rumprun_boot(char *cmdline)
 {
@@ -92,8 +118,8 @@ rumprun_boot(char *cmdline)
 	rump_init();
 
 	/* mount /tmp before we let any userspace bits run */
-	rump_sys_mount(MOUNT_TMPFS, "/tmp", 0, &ta, sizeof(ta));
-	tmpfserrno = errno;
+	//rump_sys_mount(MOUNT_TMPFS, "/tmp", 0, &ta, sizeof(ta));
+	//tmpfserrno = errno;
 
 	/*
 	 * XXX: _netbsd_userlevel_init() should technically be called
@@ -108,13 +134,6 @@ rumprun_boot(char *cmdline)
 	rumprun_lwp_init();
 	_netbsd_userlevel_init();
 
-	/* print tmpfs result only after we bootstrapped userspace */
-	if (tmpfserrno == 0) {
-		fprintf(stderr, "mounted tmpfs on /tmp\n");
-	} else {
-		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
-	}
-
 	/*
 	 * We set duplicate address detection off for
 	 * immediately operational DHCP addresses.
@@ -125,6 +144,28 @@ rumprun_boot(char *cmdline)
 	sysctlbyname("net.inet.ip.dad_count", NULL, NULL, &x, sizeof(x));
 
 	rumprun_config(cmdline);
+
+	int res;
+	res = rump_sys_mkdir("/dev", 0777);
+	if (res == -1)
+		warnx("FAILED: mkdir /dev");
+
+	res = rump_sys_mkdir("/tmp", 0777);
+	if (res == -1)
+		warnx("FAILED: mkdir /tmp");
+
+	rump_component_init(RUMP__FACTION_DEV);
+	/* mount /tmp before we let any userspace bits run */
+	rump_sys_mount(MOUNT_TMPFS, "/tmp", 0, &ta, sizeof(ta));
+	tmpfserrno = errno;
+	/* print tmpfs result only after we bootstrapped userspace */
+	if (tmpfserrno == 0) {
+		fprintf(stderr, "mounted tmpfs on /tmp\n");
+	} else {
+		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
+	}
+
+	rump_devnull_init();
 
 	sysproxy = getenv("RUMPRUN_SYSPROXY");
 	if (sysproxy) {
