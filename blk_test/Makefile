@@ -5,6 +5,7 @@ blk-rumprun.ukvm: blk.c
 	rumprun-bake solo5_ukvm_net blk-rumprun.ukvm blk-rumprun
 
 blk-rumprun.seccomp: blk.c
+	cp ../../solo5/kernel/ukvm/solo5.o ../rumprun-solo5/rumprun-x86_64/lib/rumprun-solo5/libsolo5_seccomp.a
 	x86_64-rumprun-netbsd-gcc -o blk-rumprun blk.c
 	rumprun-bake solo5_ukvm_seccomp blk-rumprun.seccomp blk-rumprun
 
@@ -30,6 +31,29 @@ test.ext2:
 	#mkfs.ext2 test.ext2
 	#e2cp test/aaaaaaaaaaaaaaax test.ext2:/.
 
+test.lfs:
+	dd if=/dev/zero of=test.lfs count=1000 bs=1024
+	genext2fs -B 1024 -b 1000 -d test test.lfs
+
+test.zfs: FORCE
+	rm -f test.zfs
+	sudo zpool destroy -f nabla || true
+	dd if=/dev/zero of=test.zfs count=100 bs=1024000
+	sudo zpool create -o version=23 nabla /home/kollerr/nabla-base-build/rumprun/blk_test/test.zfs
+	#sudo zpool create -o version=23 -m legacy nabla /home/kollerr/nabla-base-build/rumprun/blk_test/test.zfs
+	#sudo zpool create -o version=23 -O version=5 -m legacy nabla /home/kollerr/nabla-base-build/rumprun/blk_test/test.zfs
+	#sudo zpool create -O version=5 -m legacy nabla /home/kollerr/nabla-base-build/rumprun/blk_test/test.zfs
+	#sudo zpool upgrade -V 23 nabla4
+	sudo chown kollerr:kollerr test.zfs
+
+test.nilfs: FORCE
+	rm -f test.nilfs
+	dd if=/dev/zero of=test.nilfs count=200000 bs=1024
+	mkfs.nilfs2 test.nilfs
+	#/home/kollerr/Downloads/nilfs-1.0.16/newfs/mkfs.nilfs -b 1024 test.nilfs
+
+FORCE:
+
 test.iso: test
 	genisoimage -U -J -f -joliet-long -r -allow-lowercase -allow-multidot -o test.iso test
 
@@ -40,12 +64,22 @@ run_ukvm: blk-rumprun.ukvm test.iso test.ext2
 	../ukvm-bin.vm --disk=test.ext2 --net=tap100 blk-rumprun.ukvm '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	e2tail test.ext2:/bla
 
-.PHONY: run_seccomp
-run_seccomp: blk-rumprun.seccomp test.iso test.ext2
+run_seccomp_ext2: blk-rumprun.seccomp test.iso test.ext2
 	touch dummy
 	#../ukvm-bin.seccomp --disk=test.iso --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
+	#../ukvm-bin.seccomp --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	../ukvm-bin.seccomp --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	e2tail test.ext2:/bla
+
+run_seccomp_nilfs: blk-rumprun.seccomp test.nilfs
+	../ukvm-bin.seccomp --disk=test.nilfs --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
+
+run_seccomp: blk-rumprun.seccomp
+	../ukvm-bin.seccomp --disk=test.zfs --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"ld0a","fstype":"blk","mountpoint":"/test"}}'
+
+run_gdb: blk-rumprun.seccomp
+	cgdb --ex="b ukvm_elf_load" --ex="r --disk=/dev/loop1 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
+	#cgdb --ex="b ukvm_elf_load" --ex="r --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
 
 .PHONY: run_ukvm_rr
 run_ukvm_rr: ukvm_rr

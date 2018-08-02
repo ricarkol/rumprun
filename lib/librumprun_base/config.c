@@ -35,7 +35,9 @@
 #include <sys/stat.h>
 
 #include <ufs/ufs/ufsmount.h>
+#include <ufs/lfs/lfs.h>
 #include <isofs/cd9660/cd9660_mount.h>
+#include <fs/nilfs/nilfs_mount.h>
 
 #include <dev/vndvar.h>
 
@@ -518,11 +520,37 @@ configetfs(const char *path, int hard)
 	return p;
 }
 
+extern int zfs_mount(void *, const char *, int);
+
+#define	MAXPATHLEN	PATH_MAX
+#define	MAXNAMELEN	PATH_MAX
+
+struct zfs_args {
+	char fspec[MAXNAMELEN - 1];
+	char dataptr[MAXPATHLEN];
+	char optptr[MAXPATHLEN];
+	char *fstype;
+	int  mflag;
+	int  datalen;
+	int  optlen;
+	int  flags;
+};
+
+#define	MS_OPTIONSTR	__MNT_UNUSED1
+#define	__MNT_UNUSED1	0x00200000
+
 static bool
 mount_blk(const char *dev, const char *mp)
 {
 	struct ufs_args mntargs_ufs = { .fspec = __UNCONST(dev) };
 	struct iso_args mntargs_iso = { .fspec = dev };
+	struct nilfs_args mntargs_nilfs = { .fspec = __UNCONST(dev) };
+	mntargs_nilfs.version = 1;
+	struct zfs_args mntargs_zfs = {};
+	strcpy(mntargs_zfs.fspec, dev);
+	mntargs_zfs.fstype = __UNCONST("zfs");
+	int flags = 0;
+	mntargs_zfs.flags = MS_OPTIONSTR | flags;
 
 	if (mount(MOUNT_FFS, mp, MNT_UNION, &mntargs_ufs, sizeof(mntargs_ufs)) == 0)
 		return true;
@@ -530,6 +558,15 @@ mount_blk(const char *dev, const char *mp)
 		return true;
 	if (mount(MOUNT_CD9660,
 	    mp, MNT_RDONLY|MNT_UNION, &mntargs_iso, sizeof(mntargs_iso)) == 0)
+		return true;
+	warnx("mounting lfs\n");
+	if (mount(MOUNT_NILFS, mp, MNT_RDONLY, &mntargs_nilfs, sizeof(mntargs_nilfs)) == 0)
+	//if (mount(MOUNT_NILFS, mp, MNT_UPDATE, &mntargs_nilfs, sizeof(mntargs_nilfs)) == 0)
+		return true;
+	warnx("mounting zfs\n");
+	//if (zfs_mount(NULL, mp, 0) == 0)
+	//	return true;
+	if (mount(MOUNT_ZFS, mp, 0, &mntargs_zfs, sizeof(mntargs_zfs)) == 0)
 		return true;
 
 	return false;
