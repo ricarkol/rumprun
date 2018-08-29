@@ -50,7 +50,11 @@ test.nilfs: FORCE
 	rm -f test.nilfs
 	dd if=/dev/zero of=test.nilfs count=200000 bs=1024
 	mkfs.nilfs2 test.nilfs
-	#/home/kollerr/Downloads/nilfs-1.0.16/newfs/mkfs.nilfs -b 1024 test.nilfs
+	mkdir -p /tmp/nilfs
+	sudo mount test.nilfs /tmp/nilfs
+	sudo cp -r test /tmp/nilfs/.
+	sudo umount test.nilfs
+	chown kollerr:kollerr test.nilfs
 
 FORCE:
 
@@ -71,6 +75,9 @@ run_seccomp_ext2: blk-rumprun.seccomp test.iso test.ext2
 	../ukvm-bin.seccomp --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 	e2tail test.ext2:/bla
 
+run_seccomp_lfs: blk-rumprun.seccomp
+	../ukvm-bin.seccomp --disk=test.lfs --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
+
 run_seccomp_nilfs: blk-rumprun.seccomp test.nilfs
 	../ukvm-bin.seccomp --disk=test.nilfs --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"/dev/ld0a","fstype":"blk","mountpoint":"/test"}}'
 
@@ -78,7 +85,7 @@ run_seccomp: blk-rumprun.seccomp
 	../ukvm-bin.seccomp --disk=test.zfs --net=tap100 blk-rumprun.seccomp '{"cmdline":"","blk":{"source":"etfs","path":"ld0a","fstype":"blk","mountpoint":"/test"}}'
 
 run_gdb: blk-rumprun.seccomp
-	cgdb --ex="b ukvm_elf_load" --ex="r --disk=/dev/loop1 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
+	cgdb --ex="b ukvm_elf_load" --ex="r --disk=test.lfs --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
 	#cgdb --ex="b ukvm_elf_load" --ex="r --disk=test.ext2 --net=tap100 blk-rumprun.seccomp '{\"cmdline\":\"\",\"blk\":{\"source\":\"etfs\",\"path\":\"/dev/ld0a\",\"fstype\":\"blk\",\"mountpoint\":\"/test\"}}'" --ex="finish" --ex="add-symbol-file blk-rumprun.seccomp 0x100000" ../ukvm-bin.seccomp
 
 .PHONY: run_ukvm_rr

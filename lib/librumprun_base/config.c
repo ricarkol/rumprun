@@ -544,6 +544,7 @@ mount_blk(const char *dev, const char *mp)
 {
 	struct ufs_args mntargs_ufs = { .fspec = __UNCONST(dev) };
 	struct iso_args mntargs_iso = { .fspec = dev };
+	struct ulfs_args mntargs_ulfs = { .fspec = __UNCONST(dev) };
 	struct nilfs_args mntargs_nilfs = { .fspec = __UNCONST(dev) };
 	mntargs_nilfs.version = 1;
 	struct zfs_args mntargs_zfs = {};
@@ -560,8 +561,10 @@ mount_blk(const char *dev, const char *mp)
 	    mp, MNT_RDONLY|MNT_UNION, &mntargs_iso, sizeof(mntargs_iso)) == 0)
 		return true;
 	warnx("mounting lfs\n");
-	if (mount(MOUNT_NILFS, mp, MNT_RDONLY, &mntargs_nilfs, sizeof(mntargs_nilfs)) == 0)
-	//if (mount(MOUNT_NILFS, mp, MNT_UPDATE, &mntargs_nilfs, sizeof(mntargs_nilfs)) == 0)
+	if (mount(MOUNT_LFS, mp, MNT_UNION, &mntargs_ulfs, sizeof(mntargs_ulfs)) == 0)
+		return true;
+	warnx("mounting nilfs\n");
+	if (mount(MOUNT_NILFS, mp, MNT_UNION, &mntargs_nilfs, sizeof(mntargs_nilfs)) == 0)
 		return true;
 	warnx("mounting zfs\n");
 	//if (zfs_mount(NULL, mp, 0) == 0)
